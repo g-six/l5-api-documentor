@@ -4,13 +4,9 @@ Automatically generate your API documentation from your existing Laravel routes.
 
 `php artisan api:gen --routePrefix="settings/api/*"`
 
-![image](http://img.shields.io/packagist/v/g-six/laravel-apidoc-generator.svg?style=flat)
-![image](http://img.shields.io/packagist/l/g-six/laravel-apidoc-generator.svg?style=flat)
-[![codecov.io](https://codecov.io/github/g-six/laravel-apidoc-generator/coverage.svg?branch=master)](https://codecov.io/github/g-six/laravel-apidoc-generator?branch=master)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/g-six/laravel-apidoc-generator/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/g-six/laravel-apidoc-generator/?branch=master)
-[![Build Status](https://travis-ci.org/g-six/laravel-apidoc-generator.svg?branch=master)](https://travis-ci.org/g-six/laravel-apidoc-generator)
-[![StyleCI](https://styleci.io/repos/57999295/shield)](https://styleci.io/repos/57999295)
-[![Dependency Status](https://www.versioneye.com/php/g-six:laravel-apidoc-generator/dev-master/badge?style=flat)](https://www.versioneye.com/php/g-six:laravel-apidoc-generator/dev-master)
+![image](http://img.shields.io/packagist/v/g-six/l5-api-documentor.svg?style=flat)
+![image](http://img.shields.io/packagist/l/g-six/l5-api-documentor.svg?style=flat)
+[![Dependency Status](https://www.versioneye.com/php/g-six:l5-api-documentor/dev-master/badge?style=flat)](https://www.versioneye.com/php/g-six:l5-api-documentor/dev-master)
 
 
 ## Installation
@@ -18,7 +14,7 @@ Automatically generate your API documentation from your existing Laravel routes.
 Require this package with composer using the following command:
 
 ```sh
-$ composer require g-six/laravel-apidoc-generator
+$ composer require g-six/l5-api-documentor
 ```
 Go to your `config/app.php` and add the service provider:
 
