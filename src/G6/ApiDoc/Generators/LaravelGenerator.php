@@ -181,6 +181,7 @@ class LaravelGenerator extends AbstractGenerator
                         return app()->call([$parameterReflection, 'validator'])
                             ->getRules();
                     } else {
+                        $parameterReflection->setMethod($this->getHttpVerb($method));
                         return app()->call([$parameterReflection, 'rules']);
                     }
                 }
@@ -188,5 +189,16 @@ class LaravelGenerator extends AbstractGenerator
         }
 
         return [];
+    }
+
+    /**
+     * @param  string $method
+     *
+     * @return string
+     */
+    protected function getHttpVerb($method) {
+        if ($method === 'store') return 'post';
+        if ($method === 'update') return 'put';
+        return 'get';
     }
 }
