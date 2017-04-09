@@ -22,6 +22,7 @@ class GenerateDocumentation extends Command
      */
     protected $signature = 'api:generate 
                             {--output=public/docs : The output path for the generated documentation}
+                            {--uriPrefix= : The uri prefix to use for generation}
                             {--routePrefix= : The route prefix to use for generation}
                             {--routes=* : The route names to use for generation}
                             {--middleware= : The middleware to use for generation}
@@ -61,6 +62,7 @@ class GenerateDocumentation extends Command
     {
         if ($this->option('router') === 'laravel') {
             $generator = new LaravelGenerator();
+            $generator->setUriPrefix($this->option('uriPrefix'));
         } else {
             $generator = new DingoGenerator();
         }
@@ -259,9 +261,9 @@ class GenerateDocumentation extends Command
             if (in_array($route->getName(), $allowedRoutes) || str_is($routePrefix, $generator->getUri($route)) || in_array($middleware, $route->middleware())) {
                 if ($this->isValidRoute($route) && $this->isRouteVisibleForDocumentation($route->getAction()['uses'])) {
                     $parsedRoutes[] = $generator->processRoute($route, $bindings, $this->option('header'), $withResponse);
-                    $this->info('Processed route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getUri($route));
+                    $this->info('Processed route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getFullUri($route));
                 } else {
-                    $this->warn('Skipping route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getUri($route));
+                    $this->warn('Skipping route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getFullUri($route));
                 }
             }
         }

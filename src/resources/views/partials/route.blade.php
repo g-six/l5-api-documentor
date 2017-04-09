@@ -50,7 +50,7 @@ $.ajax(settings).done(function (response) {
 ```
 @endif
 
-### {!! config('app.scheme') !== NULL ? config('app.scheme') : 'HTTP' !!} Request
+### {!! config('app.url') !== NULL ? strtoupper(trim(substr(config('app.url'), 0, 5), ':')) : 'HTTP' !!} Request
 @foreach($parsedRoute['methods'] as $method)
 `{{$method}} {{$parsedRoute['uri']}}`
 

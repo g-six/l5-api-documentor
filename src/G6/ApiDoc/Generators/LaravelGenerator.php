@@ -10,6 +10,34 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class LaravelGenerator extends AbstractGenerator
 {
+    private $uri_prefix = '';
+
+    /**
+     * @param string $uri_prefix
+     *
+     * @return void
+     */
+    public function setUriPrefix($uri_prefix)
+    {
+        if ($uri_prefix !== NULL) {
+           $this->uri_prefix = '/'.trim($uri_prefix, '/').'/';
+        }
+    }
+
+    /**
+     * @param Route $route
+     *
+     * @return mixed
+     */
+    public function getFullUri($route)
+    {
+        if (version_compare(app()->version(), '5.4', '<')) {
+            return $this->uri_prefix.$route->getUri();
+        }
+
+        return $this->uri_prefix.$route->uri();
+    }
+
     /**
      * @param Route $route
      *
@@ -46,7 +74,7 @@ class LaravelGenerator extends AbstractGenerator
      *
      * @return array
      */
-    public function processRoute($route, $bindings = [], $headers = [], $withResponse = true, $uriPrefix = '')
+    public function processRoute($route, $bindings = [], $headers = [], $withResponse = true)
     {
         $content = '';
 
@@ -69,7 +97,7 @@ class LaravelGenerator extends AbstractGenerator
             'title' => $routeDescription['short'],
             'description' => $routeDescription['long'],
             'methods' => $this->getMethods($route),
-            'uri' => $uriPrefix.$this->getUri($route),
+            'uri' => $this->getFullUri($route),
             'parameters' => [],
             'response' => $content,
         ], $routeAction, $bindings);
