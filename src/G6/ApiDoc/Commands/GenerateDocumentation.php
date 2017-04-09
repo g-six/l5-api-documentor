@@ -252,14 +252,13 @@ class GenerateDocumentation extends Command
     private function processLaravelRoutes(AbstractGenerator $generator, $allowedRoutes, $routePrefix, $middleware)
     {
         $withResponse = $this->option('noResponseCalls') === false;
-        $uriPrefix = $this->option('uri-prefix');
         $routes = $this->getRoutes();
         $bindings = $this->getBindings();
         $parsedRoutes = [];
         foreach ($routes as $route) {
             if (in_array($route->getName(), $allowedRoutes) || str_is($routePrefix, $generator->getUri($route)) || in_array($middleware, $route->middleware())) {
                 if ($this->isValidRoute($route) && $this->isRouteVisibleForDocumentation($route->getAction()['uses'])) {
-                    $parsedRoutes[] = $generator->processRoute($route, $bindings, $this->option('header'), $withResponse, $uriPrefix);
+                    $parsedRoutes[] = $generator->processRoute($route, $bindings, $this->option('header'), $withResponse);
                     $this->info('Processed route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getUri($route));
                 } else {
                     $this->warn('Skipping route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getUri($route));
