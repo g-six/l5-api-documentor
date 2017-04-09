@@ -6,7 +6,7 @@ use Faker\Factory;
 use ReflectionClass;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use G6\Reflection\DocBlock;
+use Mpociot\Reflection\DocBlock;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use G6\ApiDoc\Parsers\RuleDescriptionParser as Description;

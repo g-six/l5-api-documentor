@@ -4,10 +4,10 @@ namespace G6\ApiDoc\Commands;
 
 use ReflectionClass;
 use Illuminate\Console\Command;
-use G6\Reflection\DocBlock;
+use Mpociot\Reflection\DocBlock;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
-use G6\Documentarian\Documentarian;
+use Mpociot\Documentarian\Documentarian;
 use G6\ApiDoc\Postman\CollectionWriter;
 use G6\ApiDoc\Generators\DingoGenerator;
 use G6\ApiDoc\Generators\LaravelGenerator;
