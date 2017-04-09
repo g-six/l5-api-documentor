@@ -1,5 +1,5 @@
 {
-    "name": "g-six/laravel-apidoc-generator",
+    "name": "g-six/l5-api-documentor",
     "license": "MIT",
     "description": "Generate beautiful API documentation from your Laravel application",
     "keywords": [
@@ -7,7 +7,7 @@
         "Documentation",
         "Laravel"
     ],
-    "homepage": "http://github.com/g-six/laravel-apidoc-generator",
+    "homepage": "http://github.com/g-six/l5-api-documentor",
     "authors": [
         {
             "name": "g-six",
