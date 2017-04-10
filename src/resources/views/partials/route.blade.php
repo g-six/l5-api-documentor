@@ -11,12 +11,10 @@
 
 ```bash
 curl -X {{$parsedRoute['methods'][0]}} "{{config('app.url')}}{{$parsedRoute['uri']}}" \
--H "Accept: application/json"@if(count($parsedRoute['parameters'])) \
-@foreach($parsedRoute['parameters'] as $attribute => $parameter)
-    -d "{{$attribute}}"="{{$parameter['value']}}" \
-@endforeach
+-H "Accept: application/json" -H "Content-type: application/json"
+@if(count($parsedRoute['parameters']))
+-d {!! json_encode(array_combine(array_keys($parsedRoute['parameters']), array_map(function($param){ return $param['value']; },$parsedRoute['parameters']))) !!}
 @endif
-
 ```
 
 ```javascript

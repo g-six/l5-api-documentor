@@ -8,6 +8,7 @@ use Mpociot\Reflection\DocBlock;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Mpociot\Documentarian\Documentarian;
+use App\Nrb\NrbAuth;
 use G6\ApiDoc\Postman\CollectionWriter;
 use G6\ApiDoc\Generators\DingoGenerator;
 use G6\ApiDoc\Generators\LaravelGenerator;
@@ -20,7 +21,7 @@ class GenerateDocumentation extends Command
      *
      * @var string
      */
-    protected $signature = 'api:generate 
+    protected $signature = 'api:generate
                             {--output=public/docs : The output path for the generated documentation}
                             {--uriPrefix= : The uri prefix to use for generation}
                             {--routePrefix= : The route prefix to use for generation}
@@ -29,7 +30,8 @@ class GenerateDocumentation extends Command
                             {--noResponseCalls : Disable API response calls}
                             {--noPostmanCollection : Disable Postman collection creation}
                             {--useMiddlewares : Use all configured route middlewares}
-                            {--actAsUserId= : The user ID to use for API response calls}
+                            {--actAsUserID= : The user to use for API response calls}
+                            {--data= : The user credentials to use for API response calls}
                             {--router=laravel : The router to be used (Laravel or Dingo)}
                             {--force : Force rewriting of existing routes}
                             {--bindings= : Route Model Bindings}
@@ -70,8 +72,8 @@ class GenerateDocumentation extends Command
         $allowedRoutes = $this->option('routes');
         $routePrefix = $this->option('routePrefix');
         $middleware = $this->option('middleware');
-
-        $this->setUserToBeImpersonated($this->option('actAsUserId'));
+        $auth = json_decode($this->option('data'))->auth;
+        $this->setUserToBeImpersonated($auth);
 
         if ($routePrefix === null && ! count($allowedRoutes) && $middleware === null) {
             $this->error('You must provide either a route prefix or a route or a middleware to generate the documentation.');
@@ -217,18 +219,16 @@ class GenerateDocumentation extends Command
     /**
      * @param $actAs
      */
-    private function setUserToBeImpersonated($actAs)
+    private function setUserToBeImpersonated($auth)
     {
-        if (! empty($actAs)) {
-            if (version_compare($this->laravel->version(), '5.2.0', '<')) {
-                $userModel = config('auth.model');
-                $user = $userModel::find((int) $actAs);
-                $this->laravel['auth']->setUser($user);
-            } else {
-                $userModel = config('auth.providers.users.model');
-                $user = $userModel::find((int) $actAs);
-                $this->laravel['auth']->guard()->setUser($user);
-            }
+        if (version_compare($this->laravel->version(), '5.2.0', '<')) {
+            $userModel = config('auth.model');
+            $user = $userModel::find((int) $auth->id);
+            $this->laravel['auth']->setUser($user);
+        } else {
+            $userModel = config('auth.providers.users.model');
+            $user = $userModel::find((int) $auth->id);
+            $this->laravel['auth']->guard()->setUser($user);
         }
     }
 
@@ -257,13 +257,33 @@ class GenerateDocumentation extends Command
         $routes = $this->getRoutes();
         $bindings = $this->getBindings();
         $parsedRoutes = [];
+        $user = $this->laravel['auth']->guard()->getUser();
+        $auth = json_decode($this->option('data'))->auth;
+        $headers = $this->option('header');
+        $x_token_idx = sizeof($headers);
+
+        NrbAuth::attempt(["username" => $auth->username, "password" => $auth->password, "id" => $user->id]);
+        $headers[$x_token_idx] = "X-Token: ".$user->access_token->token;
+
+
         foreach ($routes as $route) {
             if (in_array($route->getName(), $allowedRoutes) || str_is($routePrefix, $generator->getUri($route)) || in_array($middleware, $route->middleware())) {
                 if ($this->isValidRoute($route) && $this->isRouteVisibleForDocumentation($route->getAction()['uses'])) {
-                    $parsedRoutes[] = $generator->processRoute($route, $bindings, $this->option('header'), $withResponse);
+                    $parsedRoutes[] = $generator->processRoute($route, $bindings, $headers, $withResponse);
+
+                    if (in_array('auth',$route->middleware())) {
+                        $this->info($headers[$x_token_idx]);
+                    }
+
                     $this->info('Processed route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getFullUri($route));
                 } else {
                     $this->warn('Skipping route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getFullUri($route));
+                }
+
+                if (in_array('auth',$route->middleware())) {
+                    // Refresh token after usage
+                    NrbAuth::attempt(["username" => $auth->username, "password" => $auth->password, "id" => $user->id]);
+                    $headers[$x_token_idx] = "X-Token: ".$user->access_token->token;
                 }
             }
         }
@@ -287,7 +307,7 @@ class GenerateDocumentation extends Command
         foreach ($routes as $route) {
             if (empty($allowedRoutes) || in_array($route->getName(), $allowedRoutes) || str_is($routePrefix, $route->uri()) || in_array($middleware, $route->middleware())) {
                 if ($this->isValidRoute($route) && $this->isRouteVisibleForDocumentation($route->getAction()['uses'])) {
-                    $parsedRoutes[] = $generator->processRoute($route, $bindings, $this->option('header'), $withResponse);
+                    $parsedRoutes[] = $generator->processRoute($route, $bindings, json_decode($this->option('data') || '{}'), $this->option('header'), $withResponse);
                     $this->info('Processed route: ['.implode(',', $route->getMethods()).'] '.$route->uri());
                 } else {
                     $this->warn('Skipping route: ['.implode(',', $route->getMethods()).'] '.$route->uri());
