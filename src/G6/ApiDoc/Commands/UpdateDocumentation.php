@@ -3,7 +3,7 @@
 namespace G6\ApiDoc\Commands;
 
 use Illuminate\Console\Command;
-use Mpociot\Documentarian\Documentarian;
+use G6\ApiDoc\Documentarian;
 
 class UpdateDocumentation extends Command
 {

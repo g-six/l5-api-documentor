@@ -9,4 +9,4 @@ includes:
 search: true
 
 toc_footers:
-- <a href='http://github.com/mpociot/documentarian'>Documentation Powered by Documentarian</a>
+- Documentation v1.0
