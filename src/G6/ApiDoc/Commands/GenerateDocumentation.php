@@ -72,8 +72,6 @@ class GenerateDocumentation extends Command
         $allowedRoutes = $this->option('routes');
         $routePrefix = $this->option('routePrefix');
         $middleware = $this->option('middleware');
-        $auth = json_decode($this->option('data'))->auth;
-        $this->setUserToBeImpersonated($auth);
 
         if ($routePrefix === null && ! count($allowedRoutes) && $middleware === null) {
             $this->error('You must provide either a route prefix or a route or a middleware to generate the documentation.');
@@ -221,14 +219,11 @@ class GenerateDocumentation extends Command
      */
     private function setUserToBeImpersonated($auth)
     {
-        if (version_compare($this->laravel->version(), '5.2.0', '<')) {
-            $userModel = config('auth.model');
-            $user = $userModel::find((int) $auth->id);
-            $this->laravel['auth']->setUser($user);
-        } else {
-            $userModel = config('auth.providers.users.model');
-            $user = $userModel::find((int) $auth->id);
+        $userModel = config('auth.providers.users.model');
+        if ($user = $userModel::find((int) $auth->id)) {
             $this->laravel['auth']->guard()->setUser($user);
+        } else {
+            $this->warn('Unable to authenticate: '.$auth->id);
         }
     }
 
@@ -257,35 +252,63 @@ class GenerateDocumentation extends Command
         $routes = $this->getRoutes();
         $bindings = $this->getBindings();
         $parsedRoutes = [];
-        $user = $this->laravel['auth']->guard()->getUser();
-        $auth = json_decode($this->option('data'))->auth;
+        $deleteRoutes = [];
+        $users = [];
+
         $headers = $this->option('header');
         $x_token_idx = sizeof($headers);
 
-        NrbAuth::attempt(["username" => $auth->username, "password" => $auth->password, "id" => $user->id]);
-        $headers[$x_token_idx] = "X-Token: ".$user->access_token->token;
-
+        $api_routes = config('documentor.routes');
+        $api_users = config('documentor.users');
 
         foreach ($routes as $route) {
+            $route_action = explode('\\', $route->getActionName());
+            $route_name = $route_action[sizeof($route_action)-1];
+
+            if (array_key_exists($route_name, $api_routes)) {
+                $impersonation = new \stdClass();
+                $impersonation->username = $api_routes[$route_name];
+                $impersonation->password = $api_users[$impersonation->username]['password'];
+                $impersonation->id = $api_users[$impersonation->username]['id'];
+                $auth = NULL;
+
+                if (array_key_exists($impersonation->username, $users)) {
+                    $auth = $users[$impersonation->username];
+                    $this->warn('User already added previously... continue...');
+                } else {
+                    $this->setUserToBeImpersonated($impersonation);
+
+                    $this->info($route_name.': '.$impersonation->username);
+                    if (NrbAuth::attempt($api_users[$impersonation->username])) {
+                        $auth = $users[$impersonation->username] = $this->laravel['auth']->guard()->getUser();
+                    }
+                }
+                if (!is_null($auth)) {
+                    $this->info("Processing $route_name with token `".$auth->access_token->token."`");
+                    $headers[$x_token_idx] = "X-Token: ".$auth->access_token->token;
+                }
+            }
+
             if (in_array($route->getName(), $allowedRoutes) || str_is($routePrefix, $generator->getUri($route)) || in_array($middleware, $route->middleware())) {
                 if ($this->isValidRoute($route) && $this->isRouteVisibleForDocumentation($route->getAction()['uses'])) {
-                    $parsedRoutes[] = $generator->processRoute($route, $bindings, $headers, $withResponse);
-
-                    if (in_array('auth',$route->middleware())) {
-                        $this->info($headers[$x_token_idx]);
+                    if (in_array('DELETE', $generator->getMethods($route))) {
+                        $deleteRoutes[] = [$route, $bindings, $headers, $withResponse];
+                    } else {
+                        $parsedRoutes[] = $generator->processRoute($route, $bindings, $headers, $withResponse);
                     }
 
                     $this->info('Processed route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getFullUri($route));
                 } else {
                     $this->warn('Skipping route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getFullUri($route));
                 }
-
-                if (in_array('auth',$route->middleware())) {
-                    // Refresh token after usage
-                    NrbAuth::attempt(["username" => $auth->username, "password" => $auth->password, "id" => $user->id]);
-                    $headers[$x_token_idx] = "X-Token: ".$user->access_token->token;
-                }
             }
+        }
+
+        for ($i = 0; $i < sizeof($deleteRoutes); $i++) {
+            list($route, $bindings, $headers, $withResponse) = $deleteRoutes[$i];
+            $parsedRoutes[] = $generator->processRoute($route, $bindings, $headers, $withResponse);
+
+            $this->info('Processed route: ['.implode(',', $generator->getMethods($route)).'] '.$generator->getFullUri($route));
         }
 
         return $parsedRoutes;
