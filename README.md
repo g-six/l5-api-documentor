@@ -130,10 +130,10 @@ public function rules()
 
 If your API route accepts a `GET` method, this package tries to call the API route with all middleware disabled to fetch an example API response. 
 
-If your API needs an authenticated user, you can use the `actAsUserId` option to specify a user ID that will be used for making these API calls:
+With Mpciot's version, if your API needs an authenticated user, you can use the `actAsUserId` option to specify a user ID that will be used for making these API calls, this doesn't work with our base code, so we added the --auth option with parameters required by our auth.
 
 ```sh
-$ php artisan api:generate --routePrefix="api/*" --auth={"admin": {"username": "username", "password": "some password"}}
+$ php artisan api:generate --routePrefix="api/*" --auth={"admin": {"username": "username", "password": "some password", "type": "admin"}}
 ```
 
 If you don't want to automatically perform API response calls, use the `noResponseCalls` option.
