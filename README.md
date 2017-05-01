@@ -2,11 +2,11 @@
 
 Automatically generate your API documentation from your existing Laravel routes. Take a look at the [example documentation](http://marcelpociot.de/whiteboard/).
 
-`php artisan api:gen --routePrefix="settings/api/*"`
+After a month of customising since forking from https://github.com/mpociot/laravel-apidoc-generator, there are a lot of changes made to fit our laravel base code ecosystem.
 
-![image](http://img.shields.io/packagist/v/g-six/l5-api-documentor.svg?style=flat)
-![image](http://img.shields.io/packagist/l/g-six/l5-api-documentor.svg?style=flat)
-[![Dependency Status](https://www.versioneye.com/php/g-six:l5-api-documentor/dev-master/badge?style=flat)](https://www.versioneye.com/php/g-six:l5-api-documentor/dev-master)
+Please take note of the changes in options below as they are different from Mpociot's original code.  Great work @mpociot.
+
+`php artisan api:gen --routePrefix="settings/api/*"`
 
 
 ## Installation
@@ -55,7 +55,7 @@ Option | Description
 `noResponseCalls` | Disable API response calls
 `noPostmanCollection` | Disable Postman collection creation
 `useMiddlewares` | Use all configured route middlewares (Needed for Laravel 5.3 `SubstituteBindings` middleware)
-`actAsUserId` | The user ID to use for authenticated API response calls
+`auth` | A JSON object notation that contains credentials to different users with different roles required to access the API routes.
 `router` | The router to use, when processing the route files (can be Laravel or Dingo - defaults to Laravel)
 `bindings` | List of route bindings that should be replaced when trying to retrieve route results. Syntax format: `binding_one,id|binding_two,id`
 `force` | Force the re-generation of existing/modified API routes
