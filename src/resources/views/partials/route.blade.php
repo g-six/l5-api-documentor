@@ -11,10 +11,13 @@
 
 ```bash
 curl -X {{$parsedRoute['methods'][0]}} "{{config('app.url')}}{{$parsedRoute['uri']}}" \
--H "Accept: application/json" -H "Content-type: application/json"
+-H "Accept: application/json" \
+-H "Content-type: application/json" \
+@if(isset($parsedRoute['headers']))
 @foreach($parsedRoute['headers'] as $header)
--H `{{$header}}`
+-H "{{$header}}" \
 @endforeach
+@endif
 @if(count($parsedRoute['parameters']))
 -d {!! json_encode(array_combine(array_keys($parsedRoute['parameters']), array_map(function($param){ return $param['value']; },$parsedRoute['parameters']))) !!}
 @endif
@@ -29,13 +32,10 @@ var settings = {
     @if(count($parsedRoute['parameters']))
 "data": {!! str_replace('    ','        ',json_encode(array_combine(array_keys($parsedRoute['parameters']), array_map(function($param){ return $param['value']; },$parsedRoute['parameters'])), JSON_PRETTY_PRINT)) !!},
     @endif
-"headers": {
-        "accept": "application/json"
-        @foreach($parsedRoute['headers'] as $header)
-,
-        `{{$header}}`
-        @endforeach
-    }
+    "headers": {
+        "accept": "application/json"@foreach($parsedRoute['headers'] as $header),
+        "{!! str_replace(': ', '": "', $header) !!}"
+    @endforeach}
 }
 
 $.ajax(settings).done(function (response) {
