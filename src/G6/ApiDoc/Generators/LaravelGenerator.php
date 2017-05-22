@@ -98,6 +98,7 @@ class LaravelGenerator extends AbstractGenerator
             'description' => $routeDescription['long'],
             'methods' => $this->getMethods($route),
             'uri' => $this->getFullUri($route),
+            'headers' => $headers,
             'parameters' => [],
             'response' => $content,
         ], $routeAction, $bindings);
